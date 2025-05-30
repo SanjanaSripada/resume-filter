@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload History</title>
+    <style>
+        body {
+            background: #8f79ba;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 40px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        li {
+            background: #f9f9f9;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .back-btn {
+            display: block;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .back-btn a {
+            text-decoration: none;
+            color: white;
+            background: #007bff;
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+
+        .back-btn a:hover {
+            background: #0056b3;
+        }
+
+        .empty-msg {
+            color: #888;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Uploaded Resumes History</h1>
+
+        {% if resumes %}
+            <ul>
+            {% for name, filename, category, score, branch, skills, upload_time in resumes %}
+                <li>
+                    <strong>Name:</strong> {{ name }}<br>
+                    <strong>Score:</strong> {{ score }}<br>
+                    <strong>Branch:</strong> {{ branch }}<br>
+                    <strong>Skills:</strong> {{ skills }}<br>
+                    <strong>Category:</strong> {{ category }}<br>
+                    <strong>Uploaded File:</strong> <a href="{{ url_for('uploaded_file', filename=filename) }}">{{ filename }}</a><br>
+                    <strong>Uploaded On:</strong> {{ upload_time }}
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p class="empty-msg">No uploaded resumes found.</p>
+        {% endif %}
+
+        <div class="back-btn">
+            <a href="/">Back to Upload</a>
+        </div>
+    </div>
+</body>
+</html>

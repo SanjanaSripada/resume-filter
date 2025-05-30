@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Filtered Results</title>
+    <style>
+        body {
+            background: #e0d64c;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 40px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #007bff;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        li {
+            background: #f8f9fa;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .back-btn {
+            display: block;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .back-btn a {
+            text-decoration: none;
+            color: white;
+            background: #28a745;
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+
+        .back-btn a:hover {
+            background: #218838;
+        }
+
+        .empty-msg {
+            color: #888;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Filtered Resume Results</h1>
+
+        <h2>IIT Candidates</h2>
+        {% if iits %}
+            <ul>
+            {% for candidate in iits %}
+                <li>
+                    <strong>Name:</strong> {{ candidate.name }}<br>
+                    <strong>Score:</strong> {{ candidate.score }}<br>
+                    <strong>Branch:</strong> {{ candidate.branch }}<br>
+                    <strong>Skills:</strong> {{ candidate.skills }}
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p class="empty-msg">No IIT candidates found.</p>
+        {% endif %}
+
+        <h2>NIT Candidates</h2>
+        {% if nits %}
+            <ul>
+            {% for candidate in nits %}
+                <li>
+                    <strong>Name:</strong> {{ candidate.name }}<br>
+                    <strong>Score:</strong> {{ candidate.score }}<br>
+                    <strong>Branch:</strong> {{ candidate.branch }}<br>
+                    <strong>Skills:</strong> {{ candidate.skills }}
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p class="empty-msg">No NIT candidates found.</p>
+        {% endif %}
+
+        <h2>Other Candidates</h2>
+        {% if others %}
+            <ul>
+            {% for candidate in others %}
+                <li>
+                    <strong>Name:</strong> {{ candidate.name }}<br>
+                    <strong>Score:</strong> {{ candidate.score }}<br>
+                    <strong>Branch:</strong> {{ candidate.branch }}<br>
+                    <strong>Skills:</strong> {{ candidate.skills }}
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p class="empty-msg">No other matching candidates found.</p>
+        {% endif %}
+
+        <div class="back-btn">
+            <a href="/">Upload More Resumes</a>
+        </div>
+    </div>
+</body>
+</html>
