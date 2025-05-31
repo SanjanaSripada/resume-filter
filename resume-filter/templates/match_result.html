@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Matched Resumes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 30px;
+            background-color: #f4f4f4;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ccc;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .center {
+            text-align: center;
+            margin-top: 40px;
+        }
+        .home-link {
+            display: block;
+            margin-top: 30px;
+            text-align: center;
+        }
+        .home-link a {
+            text-decoration: none;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+        .home-link a:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h2>Matched Candidates</h2>
+    {% if candidates %}
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Matched Skills</th>
+                <th>Match Percentage</th>
+                <th>Download Resume</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for candidate in candidates %}
+            <tr>
+                <td>{{ candidate.name }}</td>
+                <td>{{ candidate.matched_skills }}</td>
+                <td>{{ candidate.match_percentage }}%</td>
+                <td><a href="{{ url_for('uploaded_file', filename=candidate.filename) }}" target="_blank">Download</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="center">No resumes matched the selected role and skills.</p>
+    {% endif %}
+
+    <div class="home-link">
+        <a href="{{ url_for('index') }}">Back to Home</a>
+    </div>
+</body>
+</html>

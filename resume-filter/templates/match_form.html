@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Resume Filter</title>
+    <title>Filter by Job Role & Skills</title>
     <style>
         body {
             background: pink;
@@ -22,31 +22,31 @@
             width: 400px;
         }
 
-        h1 {
+        h2 {
             color: #333;
             margin-bottom: 20px;
         }
 
-        a {
-            display: block;
-            margin-top: 20px;
-            color: #007bff;
-            text-decoration: none;
-            font-weight: bold;
+        p {
+            color: #555;
+            font-size: 14px;
+            margin-bottom: 10px;
         }
 
-        a:hover {
-            color: #0056b3;
-        }
-
+        input[type="text"],
+        textarea,
         input[type="file"] {
+            width: 100%;
             padding: 10px;
+            margin: 10px 0;
             border: 2px dashed #ccc;
             border-radius: 8px;
+            box-sizing: border-box;
             background: #fafafa;
-            width: 100%;
-            margin-bottom: 20px;
-            cursor: pointer;
+        }
+
+        textarea {
+            resize: none;
         }
 
         button {
@@ -63,25 +63,29 @@
             background: #0056b3;
         }
 
-        p {
-            color: #555;
-            font-size: 14px;
-            margin-bottom: 10px;
+        a {
+            display: block;
+            margin-top: 20px;
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover {
+            color: #0056b3;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Welcome to Resume Filter</h1>
-        <form action="/filter" method="post" enctype="multipart/form-data">
-            <p>Select up to 10 PDF resumes (IIT/NIT Filter):</p>
+        <h2>Filter by Job Role & Skills</h2>
+        <form method="POST" action="/match_upload" enctype="multipart/form-data">
+            <input type="text" name="job_title" placeholder="Enter your target role" required><br>
+            <textarea name="skills" rows="4" placeholder="Enter your target skills (comma-separated)" required></textarea><br>
             <input type="file" name="resumes" multiple accept=".pdf" required><br>
-            <button type="submit">Start IIT/NIT Filtering</button><br><br>
+            <button type="submit">Start Filtering</button>
         </form>
-
-        <form action="{{ url_for('match_form') }}" method="get">
-            <button type="submit">Filter by Job Role & Skills</button>
-        </form>
+        <a href="{{ url_for('index') }}">Back to Home</a>
     </div>
 </body>
 </html>

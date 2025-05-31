@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Job Role Resume Filter</title>
+    <style>
+        body {
+            background: #f0f2f5;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 450px;
+        }
+
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin: 12px 0;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Filter Resumes by Job Role</h2>
+        <form action="/job_filter_upload" method="POST" enctype="multipart/form-data">
+            <label>Enter your target role:</label>
+            <input type="text" name="role" required>
+
+            <label>Enter your target skills (comma-separated):</label>
+            <textarea name="skills" rows="3" required placeholder="e.g., Python, SQL, Flask"></textarea>
+
+            <label>Select resumes (PDF only):</label>
+            <input type="file" name="resumes" accept=".pdf" multiple required>
+
+            <button type="submit">Evaluate Resumes</button>
+        </form>
+    </div>
+</body>
+</html>

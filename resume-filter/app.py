@@ -1,16 +1,40 @@
 import os
 import fitz  # PyMuPDF
-from flask import Flask, request, render_template, redirect, url_for
-from werkzeug.utils import secure_filename
+import re
 import sqlite3
-from flask import send_from_directory
+from flask import Flask, request, render_template, redirect, url_for, send_from_directory, session
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key_here'
 app.config['UPLOAD_FOLDER'] = 'uploads/'
 ALLOWED_EXTENSIONS = {'pdf'}
 
-# Create uploads folder if not exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Predefined skills for job roles
+ROLE_SKILLS = {
+    'data analyst': [
+        'excel', 'sql', 'tableau', 'power bi', 'python', 'r', 'data visualization',
+        'statistics', 'machine learning', 'data analysis', 'pandas', 'numpy',
+        'matplotlib', 'seaborn', 'dash', 'regression', 'predictive modeling',
+        'business intelligence', 'data mining', 'data wrangling'
+    ],
+    'python developer': [
+        'python', 'flask', 'django', 'pandas', 'numpy', 'sqlalchemy',
+        'rest api', 'oop', 'unit testing', 'json', 'regex', 'git'
+    ],
+    'front-end developer': [
+        'html', 'css', 'javascript', 'react', 'angular', 'vue', 'bootstrap',
+        'jquery', 'responsive design', 'figma'
+    ],
+    'back-end developer': [
+        'node.js', 'express', 'django', 'flask', 'sql', 'mongodb', 'rest api',
+        'authentication', 'jwt', 'mvc', 'python', 'java'
+    ]
+}
+
+# --- Helpers ---
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -22,66 +46,31 @@ def extract_text_from_pdf(pdf_path):
             text += page.get_text()
     return text
 
-def extract_info(text):
+def extract_candidate_info(text):
     text_lower = text.lower()
-    info = {}
-
-    # Extract name from the first few lines (ignoring generic headers)
-    lines = text.strip().split('\n')
-    for line in lines[:5]:
-        if line.strip() and all(kw not in line.lower() for kw in ['resume', 'cv', 'curriculum', 'email', 'phone']):
-            info['name'] = line.strip()
+    name = "Unknown"
+    for line in text.strip().split('\n')[:5]:
+        if line.strip() and all(x not in line.lower() for x in ['resume', 'cv', 'email', 'phone']):
+            name = line.strip()
             break
-    else:
-        info['name'] = "Unknown"
 
-    # Extract academic score: CGPA ≥ 9.0 or Percentage ≥ 90
-    import re
+    institute = "Other"
+    if re.search(r'\b(iit|indian institute of technology)\b', text_lower):
+        institute = "IIT"
+    elif re.search(r'\b(nit|national institute of technology)\b', text_lower):
+        institute = "NIT"
+
     cgpa_match = re.search(r'cgpa[:\s]*([0-9.]+)', text_lower)
     percent_match = re.search(r'(\d{2,3})\s*%', text_lower)
+    score = "N/A"
+    if cgpa_match:
+        score = f"{cgpa_match.group(1)} CGPA"
+    elif percent_match:
+        score = f"{percent_match.group(1)}%"
 
-    if cgpa_match and float(cgpa_match.group(1)) >= 9.0:
-        info['score'] = f"{cgpa_match.group(1)} CGPA"
-    elif percent_match and int(percent_match.group(1)) >= 90:
-        info['score'] = f"{percent_match.group(1)}%"
-    else:
-        return None  # Does not meet score requirement
+    return {'name': name, 'institute': institute, 'score': score}
 
-    # Data Analyst-specific skills
-    data_analyst_skills = [
-        'excel', 'sql', 'tableau', 'power bi', 'python', 'r', 'data visualization',
-        'statistics', 'machine learning', 'data analysis', 'pandas', 'numpy',
-        'matplotlib', 'seaborn', 'dash', 'regression', 'predictive modeling',
-        'business intelligence', 'data mining', 'data wrangling'
-    ]
-
-    found_skills = []
-    for skill in data_analyst_skills:
-        if skill in text_lower:
-            found_skills.append(skill.title())
-
-    if len(found_skills) < 2:
-        return None  # Not enough relevant skills
-
-    info['skills'] = ", ".join(found_skills)
-    info['branch'] = "Data Analyst"
-    info['institute'] = "Unknown"  # Optional: add logic if needed
-
-    return info
-
-
-
-
-# ✅ Add this function at the top level (not inside a route)
-def insert_resume(filename, category, score, branch, skills):
-    conn = sqlite3.connect('resumes.db')
-    c = conn.cursor()
-    c.execute('''
-        INSERT INTO resumes (filename, category, score, branch, skills)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (filename, category, score, branch, skills))
-    conn.commit()
-    conn.close()
+# --- Routes ---
 
 @app.route('/')
 def index():
@@ -99,81 +88,68 @@ def filter_resumes():
             file.save(filepath)
 
             text = extract_text_from_pdf(filepath)
-            info = extract_info(text)
+            info = extract_candidate_info(text)
 
-            if info:
-                # Save to database
-                insert_resume(filename, info['institute'], info['score'], info['branch'], info['skills'])
+            candidate = {
+                'name': info['name'],
+                'score': info['score'],
+                'filename': filename
+            }
 
-                # Categorize for template
-                if info['institute'] == 'IIT':
-                    iit_list.append(info)
-                elif info['institute'] == 'NIT':
-                    nit_list.append(info)
-                else:
-                    other_list.append(info)
+            if info['institute'] == 'IIT':
+                iit_list.append(candidate)
+            elif info['institute'] == 'NIT':
+                nit_list.append(candidate)
+            else:
+                other_list.append(candidate)
 
     return render_template('result.html', iits=iit_list, nits=nit_list, others=other_list)
 
-# Add this route for Data Analyst filtering in app.py
-@app.route('/evaluate_upload', methods=['GET', 'POST'])
-def evaluate_upload():
-    if request.method == 'POST':
-        files = request.files.getlist('resumes')
-        matched_candidates = []
+@app.route('/match_form')
+def match_form():
+    return render_template('match_form.html')
 
-        for file in files:
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(filepath)
+@app.route('/match_upload', methods=['POST'])
+def match_upload():
+    job_title = request.form.get('job_title', '').lower()
+    custom_skills = request.form.get('skills', '')
+    required_skills = [s.strip().lower() for s in custom_skills.split(',') if s.strip()]
 
-                text = extract_text_from_pdf(filepath)
-                info = extract_info_for_analyst(text)
+    # Append predefined skills if job title matches known roles
+    required_skills += ROLE_SKILLS.get(job_title, [])
 
-                if info:
-                    matched_candidates.append(info)
+    session['job_title'] = job_title
+    session['required_skills'] = required_skills
 
-        return render_template('evaluate_result.html', candidates=matched_candidates)
+    files = request.files.getlist('resumes')
+    matched_candidates = []
 
-    return render_template('evaluate_upload.html')
+    for file in files:
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
 
-# New extract_info_for_analyst function for JD-based filtering
-def extract_info_for_analyst(text):
-    text_lower = text.lower()
-    info = {}
+            text = extract_text_from_pdf(filepath)
+            text_lower = text.lower()
+            name = extract_candidate_info(text)['name']
 
-    # Extract name
-    lines = text.strip().split('\n')
-    for line in lines[:5]:
-        if line.strip() and all(kw not in line.lower() for kw in ['resume', 'cv', 'curriculum', 'email', 'phone']):
-            info['name'] = line.strip()
-            break
-    else:
-        info['name'] = "Unknown"
+            matched_skills = [skill for skill in required_skills if skill in text_lower]
+            match_percentage = round(len(matched_skills) / len(required_skills) * 100, 2) if required_skills else 0
 
-    # Score
-    import re
-    cgpa_match = re.search(r'cgpa[:\s]*([0-9.]+)', text_lower)
-    percent_match = re.search(r'(\d{2,})\s*%', text_lower)
+            if match_percentage > 0:
+                matched_candidates.append({
+                    'name': name,
+                    'matched_skills': ", ".join(matched_skills),
+                    'match_percentage': match_percentage,
+                    'filename': filename
+                })
 
-    if cgpa_match and float(cgpa_match.group(1)) >= 9:
-        info['score'] = f"{cgpa_match.group(1)} CGPA"
-    elif percent_match and int(percent_match.group(1)) >= 90:
-        info['score'] = f"{percent_match.group(1)}%"
-    else:
-        return None
+    return render_template('match_result.html', candidates=matched_candidates)
 
-    # Skills required for data analyst
-    required_skills = ['sql', 'excel', 'python', 'tableau', 'power bi', 'statistics', 'data analysis', 'analytics']
-    found_skills = [skill for skill in required_skills if skill in text_lower]
-
-    if not found_skills:
-        return None
-
-    info['skills'] = ", ".join(found_skills)
-    return info
-
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/history')
 def history():
@@ -183,13 +159,6 @@ def history():
     resumes = c.fetchall()
     conn.close()
     return render_template('history.html', resumes=resumes)
-
-
-
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
 
 if __name__ == '__main__':
     app.run(debug=True)
