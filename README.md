@@ -28,26 +28,11 @@
 - **Rule-based scoring algorithm** - To rank resumes
 - **HTML/CSS** - For responsive UI
 
-## Folder Structure
-pyautomateai/
-├── main.py
-├── routers/
-│ └── filter.py
-├── database/
-│ └── db.py
-├── services/
-│ └── parser.py
-├── templates/
-│ └── index.html
-├── static/
-│ └── styles.css
-├── requirements.txt
-
-2. Install dependencies
+1. Install dependencies
 Make sure you have Python 3.9+ and pip installed.
 pip install -r requirements.txt
 
-3. Access the app
+2. Access the app
 Open your browser and go to:
 http://127.0.0.1:8000
 
